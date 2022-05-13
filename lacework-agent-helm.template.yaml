@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This Cloudformation template installs the Lacework Agent into an existing EKS cluster.
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Lacework Agent Parameters
+        Parameters:
+          - EKSClusterName
+          - AgentToken
+          - LaceworkServerUrl
+    ParameterLabels:
+      EKSClusterName:
+        default: EKS Cluster Name
+      AgentToken:
+        default: Lacework Agent Token
+      LaceworkServerUrl:
+        default: Lacework API Server URL
+Parameters:
+  EKSClusterName:
+    Description: "Specify the EKS cluster name. This AWS account must have access to this cluster."
+    Type: String
+    "AllowedPattern" : ".+"
+  AgentToken:
+    Description: "Use the Lacework Agent Token. Follow these instructions to create one: https://docs.lacework.com/create-agent-access-tokens-and-download-agent-installers"
+    Type: String
+    "AllowedPattern" : ".+"
+  LaceworkServerUrl:
+    Description: "If you are using a tenant located outside of North America, change this."
+    Type: String
+    Default: "api.lacework.net"
+    "AllowedPattern": ".+"
+Resources:
+  LaceworkAgent:
+    Type: "AWSQS::Kubernetes::Helm"
+    Properties:
+      ClusterID: !Ref EKSClusterName
+      Repository: "https://lacework.github.io/helm-charts/"
+      Namespace: "lacework"
+      Chart: "lacework/lacework-agent"
+      Name: "lacework-agent"
+      Values:
+        laceworkConfig.accessToken: !Ref AgentToken
+        laceworkConfig.kubernetesCluster: !Ref EKSClusterName
+        laceworkConfig.env: !Ref EKSClusterName
+        laceworkConfig.serverUrl: !Ref EKSClusterName
+

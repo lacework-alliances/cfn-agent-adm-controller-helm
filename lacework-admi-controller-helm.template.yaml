@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This Cloudformation template installs the Lacework Agent into an existing EKS cluster.
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Lacework Agent Parameters
+        Parameters:
+          - EKSClusterName
+          - AgentToken
+          - LaceworkServerUrl
+    ParameterLabels:
+      EKSClusterName:
+        default: EKS Cluster Name
+      AgentToken:
+        default: Lacework Agent Token
+      LaceworkServerUrl:
+        default: Lacework API Server URL
+Parameters:
+  EKSClusterName:
+    Description: "Specify the EKS cluster name. This AWS account must have access to this cluster."
+    Type: String
+    "AllowedPattern" : ".+"
+  ServerCertificate:
+    Description: "Certificate for TLS authentication with the Kubernetes api-server. See https://docs.lacework.com/integrate-with-kubernetes-admission-controller#create-tlsssl-certificates"
+    Type: String
+    "AllowedPattern" : ".+"
+  ServerKey:
+    Description: "Certificate key for TLS authentication with the Kubernetes api-server. See https://docs.lacework.com/integrate-with-kubernetes-admission-controller#create-tlsssl-certificates"
+    Type: String
+    "AllowedPattern": ".+"
+  CaBundle:
+    Description: "Root certificate for TLS authentication with the Kubernetes api-server. See https://docs.lacework.com/integrate-with-kubernetes-admission-controller#create-tlsssl-certificates"
+    Type: String
+    "AllowedPattern": ".+"
+Resources:
+  LaceworkAdmissionController:
+    Type: "AWSQS::Kubernetes::Helm"
+    Properties:
+      ClusterID: !Ref EKSClusterName
+      Repository: "https://lacework.github.io/helm-charts/"
+      Namespace: "lacework"
+      Chart: "lacework/admission-controller"
+      Name: "lacework-admission-controller"
+      Values:
+        certs.serverCertificate: !Ref ServerCertificate
+        certs.serverKey: !Ref ServerKey
+        webhooks.cabundle: !Ref CaBundle
+
